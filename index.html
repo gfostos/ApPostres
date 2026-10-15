@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#b83a5e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Costos de Postres</title>
+<style>
+:root{
+  --bg:#fff8f3;--card:#ffffff;--ink:#3b2a2a;--muted:#7a6666;
+  --pri:#b83a5e;--pri-d:#8f2646;--pri-l:#fbe3ea;
+  --ok:#2f7d4f;--ok-l:#e3f4ea;--bad:#c0392b;--bad-l:#fde8e5;--warn-l:#fff3d6;
+  --line:#ecd9d2;--r:16px;
+  font-size:17px;
+}
+html.big{font-size:20px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.35;
+  padding:calc(64px + env(safe-area-inset-top)) 0 calc(150px + env(safe-area-inset-bottom));
+}
+h1,h2,h3{margin:0}
+h2{font-size:1.25rem;margin-bottom:.6rem}
+h3{font-size:1.05rem;margin:1.4rem 0 .5rem}
+button{font:inherit;color:inherit;cursor:pointer}
+.muted{color:var(--muted)}
+.center{text-align:center}
+small{font-size:.8rem}
+
+#top{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  background:var(--pri);color:#fff;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+#top h1{font-size:1.25rem}
+main{padding:14px 14px 0;max-width:720px;margin:0 auto}
+
+#tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  background:#fff;border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tab{
+  border:0;background:none;padding:8px 2px 9px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:.78rem;color:var(--muted);font-weight:600;
+}
+.tab span{font-size:1.5rem;line-height:1}
+.tab.on{color:var(--pri);background:var(--pri-l)}
+
+#fab{
+  position:fixed;right:14px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:19;
+  background:var(--pri);color:#fff;border:0;border-radius:999px;
+  padding:14px 22px;font-weight:700;font-size:1.02rem;
+  box-shadow:0 6px 16px rgba(143,38,70,.4);
+}
+#fab:active{background:var(--pri-d)}
+#fab[hidden]{display:none}
+
+.card{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:10px;
+}
+.card:active{background:var(--pri-l)}
+.card-main{min-width:0;flex:1}
+.card-main b{display:block;font-size:1.05rem;overflow-wrap:anywhere}
+.card-main span{display:block;font-size:.85rem;color:var(--muted)}
+.card-side{text-align:right;white-space:nowrap}
+.card-side b{display:block;font-size:1.15rem;color:var(--pri-d)}
+.card-side.recipe b{font-size:1.4rem}
+.card-side small{color:var(--muted);display:block}
+.badge-warn{display:inline-block;background:var(--warn-l);border-radius:8px;padding:2px 8px;font-size:.8rem;margin-top:4px}
+
+/* Ingrediente con precios por tienda */
+.ing{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.ing:active{background:var(--pri-l)}
+.ing-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.ing-h b{font-size:1.15rem;overflow-wrap:anywhere}
+.ing-h span{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.orow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:2px solid transparent}
+.orow + .orow{margin-top:6px}
+.orow.best-row{background:var(--ok-l);border-color:#bfe3cd}
+.o-main{min-width:0}
+.o-main b{display:block;overflow-wrap:anywhere}
+.o-main span{display:block;font-size:.85rem;color:var(--muted)}
+.best{display:inline-block;margin-top:4px;background:var(--ok);color:#fff;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:700}
+.more{display:inline-block;margin-top:4px;color:var(--bad);font-weight:700;font-size:.82rem}
+.o-side{text-align:right;white-space:nowrap}
+.o-side b{display:block;font-size:1.15rem;color:var(--pri-d)}
+.o-side small{color:var(--muted)}
+
+.search{
+  width:100%;margin-bottom:12px;
+}
+input,select,textarea{
+  font:inherit;color:inherit;width:100%;
+  padding:12px;border:2px solid var(--line);border-radius:12px;background:#fff;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pri)}
+textarea{min-height:90px;resize:vertical}
+label{display:block;font-weight:600;font-size:.92rem;margin:12px 0 4px}
+label .hint{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2.qty{grid-template-columns:1fr 1.2fr}
+input[hidden]{display:none}
+
+.btn{
+  border:0;border-radius:14px;padding:14px 18px;font-weight:700;font-size:1.02rem;
+  background:var(--pri);color:#fff;
+}
+.btn:active{background:var(--pri-d)}
+.btn.ghost{background:var(--pri-l);color:var(--pri-d)}
+.btn.danger{background:var(--bad-l);color:var(--bad)}
+.btn.wide{width:100%;margin-top:10px}
+.btn[disabled]{opacity:.5}
+
+.empty{text-align:center;padding:40px 20px 16px}
+.empty .big-emoji{font-size:3.5rem}
+.empty h2{margin-top:8px}
+.empty p{color:var(--muted);margin:0 0 16px}
+
+.banner{
+  display:flex;align-items:center;gap:10px;justify-content:space-between;
+  background:var(--warn-l);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;font-size:.92rem;
+}
+.banner .btn{padding:8px 12px;font-size:.9rem;white-space:nowrap}
+
+/* Pantalla de receta */
+.screen{
+  position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;
+  padding-bottom:calc(110px + env(safe-area-inset-bottom));
+}
+.bar{
+  position:sticky;top:0;z-index:2;background:var(--pri);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:calc(8px + env(safe-area-inset-top)) 10px 8px;
+}
+.bar b{font-size:1.1rem}
+.bar button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
+.screen .body{padding:6px 14px 20px;max-width:720px;margin:0 auto}
+.sticky{
+  position:fixed;left:0;right:0;bottom:0;z-index:3;background:#fff;
+  border-top:2px solid var(--pri);
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  display:flex;justify-content:space-around;align-items:flex-end;text-align:center;gap:8px;
+}
+.sticky > div{flex:1}
+.sticky small{display:block;color:var(--muted)}
+.sticky b{font-size:1.05rem}
+.sticky .sell{flex:1.6}
+.sticky .sell b{color:var(--pri-d);font-size:1.75rem;line-height:1.1}
+
+.item{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.item.missing{background:var(--bad-l)}
+.item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.item-top .nm{overflow-wrap:anywhere}
+.item-top .nm span{display:block;font-size:.82rem;color:var(--muted)}
+.x{border:0;background:var(--pri-l);color:var(--pri-d);border-radius:10px;width:38px;height:38px;font-weight:700;flex:none}
+.item-in{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;align-items:center;margin-top:8px}
+.item-cost{font-weight:700;min-width:70px;text-align:right}
+
+.res-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.res-row:last-child{border-bottom:0}
+.res-row.total{font-weight:700}
+.prices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pcard{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.pcard.rec{border-color:var(--pri);background:var(--pri-l)}
+.pcard h4{margin:0;font-size:.95rem}
+.pcard .how{display:block;font-size:.74rem;color:var(--muted);margin-bottom:6px}
+.pcard .big{font-size:1.6rem;font-weight:800;color:var(--pri-d);line-height:1.15}
+.pcard .per{font-size:.85rem;margin-top:4px}
+.pcard .none{font-size:.88rem;color:var(--muted);padding:10px 0}
+.note{border-radius:12px;padding:10px 12px;margin-top:10px;font-size:.92rem}
+.note.warn{background:var(--warn-l)}
+.note.good{background:var(--ok-l)}
+details.how{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin-top:10px}
+details.how summary{font-weight:700;cursor:pointer;padding:4px 0}
+.how-t{font-size:.95rem;margin:12px 0 4px;color:var(--pri-d)}
+.how-s{font-size:.8rem;color:var(--muted);margin:0 0 4px}
+
+/* Hojas inferiores y diálogos */
+#sheet-root{position:relative;z-index:60}
+.sheet-wrap{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end}
+.confirm-wrap{z-index:70}
+.backdrop{position:absolute;inset:0;background:rgba(40,20,25,.5)}
+.sheet{
+  position:relative;width:100%;max-width:720px;margin:0 auto;
+  background:var(--bg);border-radius:22px 22px 0 0;
+  max-height:92vh;overflow-y:auto;
+  padding:8px 16px calc(20px + env(safe-area-inset-bottom));
+}
+.grab{width:44px;height:5px;border-radius:3px;background:var(--line);margin:4px auto 12px}
+.dialog{align-items:center;justify-content:center;padding:20px}
+.dialog .sheet{border-radius:var(--r);max-width:420px;padding:20px}
+.dialog .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:10px 4px;font-weight:600;font-size:.9rem}
+.seg button.on{border-color:var(--pri);background:var(--pri-l);color:var(--pri-d)}
+.seg button[disabled]{opacity:.55}
+.calc-line{background:var(--ok-l);border-radius:12px;padding:10px 12px;margin-top:12px;font-weight:600}
+.offer{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.offer-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+
+.pk-item{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.pk-item span{color:var(--muted);font-size:.85rem}
+
+.check-row{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;font-weight:400;margin-top:12px}
+.check-row input{width:26px;height:26px;margin:2px 0 0;flex:none;accent-color:var(--pri)}
+.check-row .cr-main{flex:1;min-width:0}
+.check-row .cr-main span{display:block;font-size:.85rem;color:var(--muted)}
+
+.set-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.set-card h2{font-size:1.1rem}
+.set-card p{margin:.2rem 0 .6rem;color:var(--muted);font-size:.9rem}
+.set-card .btn{margin-right:6px;margin-top:6px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;font-size:1rem}
+.switch input{width:28px;height:28px;accent-color:var(--pri)}
+
+#toast{
+  position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:90;
+  background:#2b1d1d;color:#fff;padding:12px 18px;border-radius:12px;max-width:90%;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header id="top"><h1>Costos de Postres</h1></header>
+<main id="view"></main>
+<button id="fab" hidden></button>
+<nav id="tabs"></nav>
+<div id="sheet-root"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="file-in" accept=".json,application/json" hidden>
+
+<script>
+(() => {
+'use strict';
+
+/* ====================== Utilidades ====================== */
+const KEY = 'costos-postres-v1';
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fold = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+const byName = (a, b) => (a.name || '').localeCompare(b.name || '', 'es');
+
+const copFmt = new Intl.NumberFormat('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0});
+const numFmt = new Intl.NumberFormat('es-CO', {maximumFractionDigits:2});
+const money = v => copFmt.format(Math.round(v || 0));
+const money2 = v => v >= 100 ? money(v) : '$' + numFmt.format(v);
+const num = v => numFmt.format(v);
+const numInput = v => String(v).replace('.', ',');
+
+// Acepta "8.000", "8000", "1,5", "1.250,50"
+function parseNum(s) {
+  s = String(s ?? '').trim().replace(/[^\d.,-]/g, '');
+  if (!s) return NaN;
+  if (s.includes('.') && s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (s.includes(',')) s = s.replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  return parseFloat(s);
+}
+
+const today = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+};
+
+/* ====================== Unidades ====================== */
+const TYPES = {
+  mass:   {name:'Peso',     emoji:'⚖️', base:'g',  buy:['g','kg'],    use:['g','kg']},
+  volume: {name:'Líquido',  emoji:'🥛', base:'ml', buy:['ml','l'],    use:['ml','l','cda','cdta','taza']},
+  count:  {name:'Unidades', emoji:'🥚', base:'u',  buy:['u','docena'],use:['u','docena']}
+};
+const UNITS = {
+  g:{f:1, label:'gramos (g)', short:'g'},
+  kg:{f:1000, label:'kilos (kg)', short:'kg'},
+  ml:{f:1, label:'mililitros (ml)', short:'ml'},
+  l:{f:1000, label:'litros (l)', short:'l'},
+  cda:{f:15, label:'cucharadas', short:'cda'},
+  cdta:{f:5, label:'cucharaditas', short:'cdta'},
+  taza:{f:240, label:'tazas', short:'taza'},
+  u:{f:1, label:'unidades', short:'u'},
+  docena:{f:12, label:'docenas', short:'doc'}
+};
+const baseQty = (qty, unit) => qty * UNITS[unit].f;
+const unitOpts = (list, sel) => list.map(u => `<option value="${u}" ${u === sel ? 'selected' : ''}>${UNITS[u].label}</option>`).join('');
+const baseWord = type => TYPES[type].base === 'u' ? 'unidad' : TYPES[type].base;
+
+/* ====================== Tiendas ====================== */
+const DEFAULT_STORES = ['Pasadena', 'Aramar', 'D1', 'ARA', 'Roma Distribuciones', 'Belen Salsamentaria'];
+const PACK = 'Empaque';   // solo para convertir datos de versiones anteriores
+
+/* ====================== Estado ====================== */
+// Versión 4: un ingrediente tiene varios precios (uno por tienda). Se quitaron marca, categoría,
+// historial de precios y minutos del tiempo de trabajo.
+function migrate(d) {
+  if (!(d.v >= 2)) {
+    const ings = d.ingredients || [];
+    const recs = d.recipes || [];
+    recs.forEach(r => {
+      r.items = Array.isArray(r.items) ? r.items : [];
+      if (r.packaging > 0) {
+        const id = uid();
+        ings.push({id, name: 'Empaque' + (r.name ? ' – ' + r.name : ''), brand:'', store:'', cat: PACK, type:'count', qty:1, unit:'u', price: r.packaging});
+        r.items.push({ing: id, amt: 1, unit: 'u'});
+      }
+      delete r.packaging; delete r.labor; delete r.other; delete r.profit;
+    });
+    d.ingredients = ings; d.recipes = recs; d.v = 2;
+  }
+  if (d.v < 4) {
+    const byKey = {}, out = [], idMap = {};
+    (d.ingredients || []).forEach(g => {
+      if (!g || !g.id) return;
+      if (Array.isArray(g.offers)) { out.push(g); return; }
+      // Si solo tenía marca, la marca queda como nombre de la "tienda" para no perder la diferencia
+      const label = String(g.store || '').trim() || String(g.brand || '').trim();
+      const offer = {id: uid(), store: label, qty: g.qty, unit: g.unit, price: g.price};
+      const key = fold(g.name) + '|' + g.type;
+      const pack = g.cat === PACK || !!g.pack;
+      const hit = byKey[key];
+      if (hit) {                       // mismo ingrediente repetido → un solo ingrediente con varios precios
+        const same = hit.offers.findIndex(o => fold(o.store) === fold(label));
+        if (same >= 0) hit.offers[same] = offer; else hit.offers.push(offer);
+        hit.pack = hit.pack || pack;
+        idMap[g.id] = hit.id;
+      } else {
+        const n = {id: g.id, name: g.name, type: g.type, pack, offers: [offer]};
+        byKey[key] = n; out.push(n);
+      }
+    });
+    (d.recipes || []).forEach(r => (r.items || []).forEach(it => { if (idMap[it.ing]) it.ing = idMap[it.ing]; }));
+    d.ingredients = out; d.v = 4;
+  }
+  return d;
+}
+function normState(d) {
+  d = migrate(d || {});
+  const settings = Object.assign({rounding:500, big:false, lastBackup:null, wage:8500, stores:[]}, d.settings || {});
+  delete settings.defExtra; delete settings.defMult; delete settings.cats;
+  settings.stores = Array.isArray(settings.stores) ? settings.stores : [];
+  const ingredients = (d.ingredients || []).map(i => ({
+    id: i.id, name: i.name || '', type: i.type, pack: !!i.pack,
+    offers: (Array.isArray(i.offers) ? i.offers : []).filter(o => o && UNITS[o.unit] && o.qty > 0 && isFinite(o.price))
+      .map(o => ({id: o.id || uid(), store: o.store || '', qty: o.qty, unit: o.unit, price: o.price}))
+  })).filter(i => i.id && TYPES[i.type] && i.offers.length);
+  ingredients.forEach(i => i.offers.forEach(o => {
+    if (o.store && !DEFAULT_STORES.includes(o.store) && !settings.stores.includes(o.store)) settings.stores.push(o.store);
+  }));
+  const recipes = (d.recipes || []).map(r => {
+    const {extraPct, mult, myPrice, min, ...rest} = r;     // el % y el multiplicador son fijos; el tiempo ahora es solo en horas
+    return {...rest, items: Array.isArray(rest.items) ? rest.items : [],
+      hrs: Math.round(((rest.hrs || 0) + (min || 0) / 60) * 100) / 100};
+  });
+  return {v:4, ingredients, recipes, settings};
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return normState(JSON.parse(raw));
+  } catch (e) {}
+  return normState({});
+}
+let S = load();
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch (e) { toast('No se pudo guardar en este dispositivo. Haz una copia de seguridad.'); }
+}
+const ingById = id => S.ingredients.find(i => i.id === id);
+const allStores = () => DEFAULT_STORES.concat(S.settings.stores.filter(s => !DEFAULT_STORES.includes(s)));
+
+/* ====================== Precios por tienda ====================== */
+const offerUnit = o => o.price / baseQty(o.qty, o.unit);                 // precio por g, ml o unidad
+const sortedOffers = g => g.offers.slice().sort((a, b) => offerUnit(a) - offerUnit(b));
+const bestOffer = g => sortedOffers(g)[0];
+const unitPrice = g => offerUnit(bestOffer(g));                          // las recetas usan el precio más barato
+
+function offersHtml(g) {
+  const offs = sortedOffers(g);
+  const bestU = offerUnit(offs[0]);
+  const multi = offs.length > 1;
+  return offs.map(o => {
+    const u = offerUnit(o);
+    const isBest = multi && u <= bestU * (1 + 1e-9);
+    const more = multi && !isBest ? Math.round((u / bestU - 1) * 100) : 0;
+    const badge = !multi ? '' : isBest ? `<span class="best">✓ Más barato</span>`
+      : more >= 1 ? `<span class="more">+${more}% más caro</span>` : `<span class="more">casi igual</span>`;
+    return `<div class="orow ${isBest ? 'best-row' : ''}">
+      <div class="o-main"><b>${esc(o.store || 'Sin tienda')}</b><span>${num(o.qty)} ${UNITS[o.unit].short}</span>${badge}</div>
+      <div class="o-side"><b>${money(o.price)}</b><small>${money2(u)} por ${baseWord(g.type)}</small></div></div>`;
+  }).join('');
+}
+
+/* ====================== Cálculos ====================== */
+const roundUp = (v, step) => step > 0 ? Math.ceil(v / step - 1e-9) * step : v;
+
+// Dos métodos, siempre fijos:
+//  · Rápido (el de mamá):  (ingredientes + empaque) + 10%  →  × 2
+//  · Por tiempo:  ingredientes + merma 5% + empaque + gastos 10% + mano de obra (horas × valor de la hora)  →  + 30% de ganancia
+const RATES = {extra:0.10, mult:2, merma:0.05, profit:0.30};
+
+function recipeCost(r) {
+  let ing = 0, pack = 0, missing = 0;
+  for (const it of r.items) {
+    const g = ingById(it.ing);
+    if (!g) { missing++; continue; }
+    const c = baseQty(it.amt || 0, it.unit) * unitPrice(g);
+    if (g.pack) pack += c; else ing += c;
+  }
+  const step = S.settings.rounding;
+  const base = ing + pack;
+  const portions = Math.max(1, r.portions || 1);
+  const extra = base * RATES.extra;                       // gastos adicionales (10%)
+  // Precio rápido
+  const quickCost = base + extra;
+  const quickRaw = quickCost * RATES.mult;
+  const quickPrice = roundUp(quickRaw, step);
+  // Precio por tiempo
+  const hrs = Math.max(0, r.hrs || 0);
+  const hasTime = hrs > 0;
+  const wage = S.settings.wage || 8500;
+  const labor = hrs * wage;
+  const merma = ing * RATES.merma;
+  const timeCost = ing + merma + pack + extra + labor;
+  const profit = timeCost * RATES.profit;
+  const timeRaw = timeCost + profit;
+  const timePrice = roundUp(timeRaw, step);
+  const minPrice = roundUp(timeCost, step);
+  const perPortion = p => roundUp(p / portions, 100);
+  return {ing, pack, base, extra, portions, missing, wage,
+    quickCost, quickRaw, quickPrice, quickPortion: perPortion(quickPrice),
+    hrs, hasTime, labor, merma, timeCost, profit, timeRaw, timePrice, timePortion: perPortion(timePrice), minPrice};
+}
+function itemCost(it) {
+  const g = ingById(it.ing);
+  return g ? baseQty(it.amt || 0, it.unit) * unitPrice(g) : 0;
+}
+
+/* ====================== UI base ====================== */
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// Pila de capas (pantallas, hojas, diálogos) conectada al botón "atrás" del celular
+const stack = [];
+let pendingClose = null;
+function pushOverlay(closeFn) {
+  stack.push(closeFn);
+  history.pushState({ov: stack.length}, '');
+}
+function closeTop() {
+  return new Promise(res => {
+    if (!stack.length) return res();
+    pendingClose = res;
+    history.back();
+  });
+}
+window.addEventListener('popstate', () => {
+  const fn = stack.pop();
+  if (fn) fn();
+  if (pendingClose) { const p = pendingClose; pendingClose = null; p(); }
+});
+
+function openSheet(html) {
+  const wrap = document.createElement('div');
+  wrap.className = 'sheet-wrap';
+  wrap.innerHTML = `<div class="backdrop" data-act="sheet-close"></div><div class="sheet" role="dialog"><div class="grab"></div>${html}</div>`;
+  $('#sheet-root').appendChild(wrap);
+  pushOverlay(() => wrap.remove());
+  wrap.addEventListener('click', e => { if (e.target.closest('[data-act="sheet-close"]')) closeTop(); });
+  return wrap;
+}
+
+function confirmBox(msg, okLabel = 'Aceptar') {
+  return new Promise(resolve => {
+    let decided = false;
+    const wrap = document.createElement('div');
+    wrap.className = 'sheet-wrap dialog confirm-wrap';
+    wrap.innerHTML = `<div class="backdrop"></div><div class="sheet" role="alertdialog">
+      <p style="margin:0;font-size:1.05rem">${esc(msg)}</p>
+      <div class="actions"><button class="btn ghost" data-v="0">Cancelar</button><button class="btn danger" data-v="1">${esc(okLabel)}</button></div></div>`;
+    $('#sheet-root').appendChild(wrap);
+    pushOverlay(() => { wrap.remove(); if (!decided) resolve(false); });
+    wrap.addEventListener('click', e => {
+      const b = e.target.closest('[data-v]');
+      if (b) { decided = true; resolve(b.dataset.v === '1'); closeTop(); }
+      else if (e.target.classList.contains('backdrop')) closeTop();
+    });
+  });
+}
+
+/* ====================== Navegación principal ====================== */
+const app = {tab: 'recipes', q: ''};
+const TABS = [
+  {id:'recipes', icon:'🍰', label:'Recetas'},
+  {id:'ingredients', icon:'🧂', label:'Ingredientes'},
+  {id:'more', icon:'⚙️', label:'Más'}
+];
+const TITLES = {recipes:'Mis recetas', ingredients:'Ingredientes', more:'Más opciones'};
+
+function render() {
+  document.documentElement.classList.toggle('big', !!S.settings.big);
+  $('#tabs').innerHTML = TABS.map(t =>
+    `<button class="tab ${t.id === app.tab ? 'on' : ''}" data-act="tab" data-id="${t.id}"><span>${t.icon}</span>${t.label}</button>`).join('');
+  $('#top h1').textContent = TITLES[app.tab];
+  const views = {recipes: viewRecipes, ingredients: viewIngredients, more: viewMore};
+  $('#view').innerHTML = views[app.tab]();
+  const fab = $('#fab');
+  fab.hidden = !(app.tab === 'recipes' || app.tab === 'ingredients');
+  fab.textContent = app.tab === 'recipes' ? '+ Nueva receta' : '+ Nuevo ingrediente';
+  fab.dataset.act = app.tab === 'recipes' ? 'new-recipe' : 'new-ing';
+}
+
+function empty(emoji, title, text, btnLabel, act) {
+  return `<div class="empty"><div class="big-emoji">${emoji}</div><h2>${esc(title)}</h2><p>${esc(text)}</p>
+    ${btnLabel ? `<button class="btn" data-act="${act}">${esc(btnLabel)}</button>` : ''}</div>`;
+}
+function sampleBtn() {
+  return (!S.ingredients.length && !S.recipes.length)
+    ? `<p class="center"><button class="btn ghost" data-act="sample">Cargar un ejemplo para probar</button></p>` : '';
+}
+
+function backupDays() {
+  const lb = S.settings.lastBackup;
+  return lb ? Math.floor((Date.now() - new Date(lb)) / 864e5) : null;
+}
+function backupBanner() {
+  const n = S.ingredients.length + S.recipes.length;
+  const d = backupDays();
+  if (!n) return '';
+  if (d === null && n < 5) return '';
+  if (d !== null && d < 7) return '';
+  const txt = d === null ? 'Aún no has guardado una copia de seguridad.' : `Hace ${d} días no guardas una copia de seguridad.`;
+  return `<div class="banner"><span>💾 ${txt}</span><button class="btn" data-act="backup">Guardar copia</button></div>`;
+}
+
+/* ====================== Vista: Recetas ====================== */
+function viewRecipes() {
+  if (!S.recipes.length) {
+    return backupBanner() + empty('🍰', 'Aún no tienes recetas', 'Crea una receta para saber cuánto cuesta y a cuánto venderla.', 'Crear mi primera receta', 'new-recipe') + sampleBtn();
+  }
+  return backupBanner() +
+    (S.recipes.length > 5 ? `<input class="search" id="q" placeholder="🔍 Buscar receta…" value="${esc(app.q)}">` : '') +
+    `<div id="list">${recipeList()}</div>`;
+}
+function recipeList() {
+  const q = fold(app.q);
+  const list = S.recipes.filter(r => fold(r.name).includes(q)).sort(byName);
+  if (!list.length) return `<p class="muted center">No se encontró ninguna receta.</p>`;
+  return list.map(r => {
+    const c = recipeCost(r);
+    const warn = c.missing ? `<span class="badge-warn">⚠ Falta un ingrediente</span>` : (!r.items.length ? `<span class="badge-warn">Sin ingredientes</span>` : '');
+    const side = c.hasTime
+      ? `<small>Por tiempo</small><b>${money(c.timePrice)}</b><small>Rápido: ${money(c.quickPrice)}</small>`
+      : `<small>Precio rápido</small><b>${money(c.quickPrice)}</b><small>Falta anotar las horas</small>`;
+    return `<button class="card" data-act="open-recipe" data-id="${r.id}">
+      <div class="card-main"><b>${esc(r.name || 'Sin nombre')}</b>
+        <span>${r.items.length} ingrediente${r.items.length === 1 ? '' : 's'} · ${money(c.base)} en ingredientes y empaque</span>${warn}</div>
+      <div class="card-side recipe">${side}</div>
+    </button>`;
+  }).join('');
+}
+
+/* ====================== Pantalla de receta ====================== */
+function newRecipe() {
+  const r = {id: uid(), name:'', portions:12, items:[], hrs:0, notes:''};
+  S.recipes.push(r);
+  save();
+  openRecipe(r.id, true);
+}
+
+function itemsHtml(r) {
+  if (!r.items.length) return `<p class="muted">Aún no has agregado ingredientes ni empaque.</p>`;
+  return r.items.map((it, i) => {
+    const g = ingById(it.ing);
+    if (!g) return `<div class="item missing" data-i="${i}"><div class="item-top"><div class="nm"><b>Ingrediente eliminado</b><span>No se está sumando al costo</span></div>
+      <button class="x" data-act="rm-item" data-i="${i}" aria-label="Quitar">✕</button></div></div>`;
+    const b = bestOffer(g);
+    const where = g.offers.length > 1 ? `Más barato: ${b.store || 'sin tienda'}` : (b.store || '');
+    return `<div class="item" data-i="${i}">
+      <div class="item-top"><div class="nm"><b>${g.pack ? '📦 ' : ''}${esc(g.name)}</b>${where ? `<span>${esc(where)}</span>` : ''}</div>
+        <button class="x" data-act="rm-item" data-i="${i}" aria-label="Quitar">✕</button></div>
+      <div class="item-in">
+        <input class="amt" inputmode="decimal" placeholder="Cantidad" value="${it.amt ? esc(numInput(it.amt)) : ''}" aria-label="Cantidad">
+        <select class="unit" aria-label="Unidad">${unitOpts(TYPES[g.type].use, it.unit)}</select>
+        <span class="item-cost" id="ic-${i}">${money(itemCost(it))}</span>
+      </div></div>`;
+  }).join('');
+}
+
+function recipeHtml(r) {
+  return `<div class="bar"><button data-act="close">← Volver</button><b>Receta</b><button data-act="dup-recipe" aria-label="Duplicar">⧉</button></div>
+  <div class="body">
+    <label for="r-name">Nombre de la receta</label>
+    <input id="r-name" data-f="name" placeholder="Ej: Torta de chocolate" value="${esc(r.name)}">
+    <label for="r-por">¿Cuántas porciones tiene la torta?<span class="hint">Sirve para calcular el valor de cada porción</span></label>
+    <input id="r-por" data-f="portions" inputmode="decimal" value="${esc(numInput(r.portions || 1))}">
+
+    <h3>🧂 Ingredientes y empaque</h3>
+    <div id="r-items">${itemsHtml(r)}</div>
+    <button class="btn ghost wide" data-act="add-item">+ Agregar ingrediente o empaque</button>
+
+    <h3>⏱ Tiempo de trabajo</h3>
+    <label for="r-hrs">¿Cuántas horas te toma hacer esta torta?<span class="hint">Cuenta todo: comprar, preparar, hornear, decorar y limpiar. Puedes usar decimales: 2,5 es dos horas y media</span></label>
+    <input id="r-hrs" data-f="hrs" inputmode="decimal" placeholder="Ej: 2,5" value="${r.hrs ? esc(numInput(r.hrs)) : ''}">
+
+    <h3>💰 Precio de venta de la torta completa</h3>
+    <div id="r-cards"></div>
+    <details class="how"><summary>¿Cómo se calcula cada precio?</summary><div id="r-how-body"></div></details>
+
+    <label for="r-notes">Notas (opcional)</label>
+    <textarea id="r-notes" data-f="notes" placeholder="Procedimiento, temperatura del horno, trucos…">${esc(r.notes || '')}</textarea>
+
+    <button class="btn danger wide" data-act="del-recipe" style="margin-top:20px">🗑 Borrar esta receta</button>
+  </div>
+  <div class="sticky" id="r-bar"></div>`;
+}
+
+function updateResults(el, r) {
+  const c = recipeCost(r);
+  r.items.forEach((it, i) => { const s = $('#ic-' + i, el); if (s) s.textContent = money(itemCost(it)); });
+
+  const quick = `<div class="pcard"><h4>⚡ Precio rápido</h4><span class="how">Costo + 10%, por 2</span>
+      <div class="big">${money(c.quickPrice)}</div><div class="per">${money(c.quickPortion)} por porción</div></div>`;
+  const time = c.hasTime
+    ? `<div class="pcard rec"><h4>⭐ Precio por tiempo</h4><span class="how">Incluye tu trabajo</span>
+        <div class="big">${money(c.timePrice)}</div><div class="per">${money(c.timePortion)} por porción</div></div>`
+    : `<div class="pcard rec"><h4>⭐ Precio por tiempo</h4><span class="how">Incluye tu trabajo</span>
+        <div class="none">Anota cuántas horas te toma para verlo</div></div>`;
+  let note = '';
+  if (c.hasTime) {
+    if (c.quickPrice < c.timeCost) note = `<div class="note warn">⚠ El precio rápido no alcanza a cubrir tus ingredientes, gastos y tu tiempo: le faltan <b>${money(c.timeCost - c.quickPrice)}</b>.</div>`;
+    else if (c.quickPrice < c.timePrice) note = `<div class="note warn">Con el precio rápido cubres tus costos y tu tiempo, pero te quedan <b>${money(c.quickPrice - c.timeCost)}</b> de ganancia en vez de <b>${money(c.timePrice - c.timeCost)}</b>.</div>`;
+    else note = `<div class="note good">✓ El precio rápido ya cubre tu tiempo y deja la ganancia completa.</div>`;
+  }
+  $('#r-cards', el).innerHTML = `<div class="prices">${quick}${time}</div>${note}
+    ${c.missing ? `<p class="muted" style="margin:10px 0 0">⚠ ${c.missing} ingrediente(s) eliminado(s) no se están sumando.</p>` : ''}`;
+
+  const row = (a, b, cls) => `<div class="res-row ${cls || ''}"><span>${a}</span><span>${b}</span></div>`;
+  $('#r-how-body', el).innerHTML = `
+    <h4 class="how-t">⚡ Precio rápido</h4><p class="how-s">El método de siempre.</p>
+    ${row('Ingredientes y empaque', money(c.base))}
+    ${row('Gastos adicionales (10%)', money(c.extra))}
+    ${row('Te cuesta', money(c.quickCost), 'total')}
+    ${row('× 2', money(c.quickRaw))}
+    ${row('Precio (redondeado)', money(c.quickPrice), 'total')}
+    <h4 class="how-t">⭐ Precio por tiempo</h4><p class="how-s">Suma cada cosa por separado y al final agrega la ganancia.</p>
+    ${row('Ingredientes', money(c.ing))}
+    ${row('Merma (5% de ingredientes)', money(c.merma))}
+    ${row('Empaque', money(c.pack))}
+    ${row('Gastos adicionales (10%)', money(c.extra))}
+    ${row(c.hasTime ? `Tu tiempo (${num(c.hrs)} h × ${money(c.wage)}/hora)` : 'Tu tiempo', c.hasTime ? money(c.labor) : '—')}
+    ${row('Te cuesta', money(c.timeCost), 'total')}
+    ${row('Ganancia (30%)', money(c.profit))}
+    ${row('Precio (redondeado)', c.hasTime ? money(c.timePrice) : '—', 'total')}
+    ${c.hasTime ? row('Precio mínimo (sin ganar nada)', money(c.minPrice)) : ''}
+    <p class="how-s" style="margin-top:8px">Los ingredientes se cuentan con el precio de la tienda más barata.${S.settings.rounding > 0 ? ` Los precios se redondean hacia arriba a ${money(S.settings.rounding)}.` : ''}</p>`;
+
+  $('#r-bar', el).innerHTML = `<div><small>⚡ Rápido</small><b>${money(c.quickPrice)}</b></div>
+    <div class="sell"><small>⭐ Por tiempo</small><b>${c.hasTime ? money(c.timePrice) : '—'}</b></div>`;
+}
+
+function openRecipe(id, isNew) {
+  const r = S.recipes.find(x => x.id === id);
+  if (!r) return;
+  const el = document.createElement('div');
+  el.className = 'screen';
+  el.innerHTML = recipeHtml(r);
+  document.body.appendChild(el);
+  pushOverlay(() => {
+    el.remove();
+    if (!(r.name || '').trim() && !r.items.length) { S.recipes = S.recipes.filter(x => x !== r); save(); }
+    render();
+  });
+
+  el.addEventListener('input', e => {
+    const t = e.target;
+    if (t.dataset.f) {
+      const f = t.dataset.f;
+      if (f === 'name' || f === 'notes') r[f] = t.value;
+      else { const n = parseNum(t.value); r[f] = isNaN(n) ? 0 : Math.max(0, n); }
+      save(); updateResults(el, r);
+    } else if (t.classList.contains('amt')) {
+      const i = +t.closest('.item').dataset.i;
+      const n = parseNum(t.value);
+      r.items[i].amt = isNaN(n) ? 0 : Math.max(0, n);
+      save(); updateResults(el, r);
+    }
+  });
+  el.addEventListener('change', e => {
+    if (e.target.classList.contains('unit')) {
+      const i = +e.target.closest('.item').dataset.i;
+      r.items[i].unit = e.target.value;
+      save(); updateResults(el, r);
+    }
+  });
+  el.addEventListener('click', async e => {
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    const a = b.dataset.act;
+    const refreshItems = () => { $('#r-items', el).innerHTML = itemsHtml(r); updateResults(el, r); };
+    if (a === 'close') closeTop();
+    else if (a === 'rm-item') { r.items.splice(+b.dataset.i, 1); save(); refreshItems(); }
+    else if (a === 'add-item') {
+      openPicker(g => {
+        r.items.push({ing: g.id, amt: 0, unit: TYPES[g.type].use[0]});
+        save(); refreshItems();
+        const inputs = el.querySelectorAll('.amt');
+        const last = inputs[inputs.length - 1];
+        if (last) { last.scrollIntoView({block:'center'}); last.focus(); }
+      });
+    }
+    else if (a === 'dup-recipe') {
+      const copy = JSON.parse(JSON.stringify(r));
+      copy.id = uid(); copy.name = (r.name || 'Receta') + ' (copia)';
+      S.recipes.push(copy); save();
+      await closeTop();
+      openRecipe(copy.id, false);
+      toast('Receta duplicada');
+    }
+    else if (a === 'del-recipe') {
+      if (await confirmBox(`¿Borrar la receta "${r.name || 'sin nombre'}"?`, 'Borrar')) {
+        S.recipes = S.recipes.filter(x => x !== r); save();
+        await closeTop();
+        toast('Receta borrada');
+      }
+    }
+  });
+  updateResults(el, r);
+  if (isNew) $('#r-name', el).focus();
+}
+
+/* ====================== Selector de ingrediente ====================== */
+function openPicker(onPick) {
+  const wrap = openSheet(`<h2>Elige un ingrediente o empaque</h2>
+    <input class="search" id="pk-q" placeholder="🔍 Buscar…" autocomplete="off">
+    <div id="pk-list"></div>
+    <button class="btn ghost wide" data-act="pk-new">+ Crear nuevo</button>`);
+  const draw = () => {
+    const q = fold($('#pk-q', wrap).value);
+    const list = S.ingredients.filter(g => fold(g.name).includes(q)).sort(byName);
+    $('#pk-list', wrap).innerHTML = list.length ? list.map(g => {
+      const b = bestOffer(g);
+      return `<button class="pk-item" data-id="${g.id}"><div><b>${g.pack ? '📦 ' : ''}${esc(g.name)}</b><br><span>${esc(b.store || 'Sin tienda')} · ${num(b.qty)} ${UNITS[b.unit].short}</span></div><b>${money(b.price)}</b></button>`;
+    }).join('') : `<p class="muted center">${S.ingredients.length ? 'No se encontró.' : 'Aún no hay ingredientes. ¡Crea el primero!'}</p>`;
+  };
+  draw();
+  $('#pk-q', wrap).addEventListener('input', draw);
+  wrap.addEventListener('click', async e => {
+    const it = e.target.closest('.pk-item');
+    if (it) { const g = ingById(it.dataset.id); await closeTop(); if (g) onPick(g); return; }
+    if (e.target.closest('[data-act="pk-new"]')) {
+      await closeTop();
+      openIng(null, g => onPick(g));
+    }
+  });
+}
+
+/* ====================== Vista: Ingredientes ====================== */
+function viewIngredients() {
+  if (!S.ingredients.length) {
+    return backupBanner() + empty('🧂', 'Aún no hay ingredientes', 'Registra lo que compras y en qué tienda. Si lo ves en varias tiendas, la app te muestra cuál es la más barata.', 'Agregar mi primer ingrediente', 'new-ing') + sampleBtn();
+  }
+  return backupBanner() +
+    `<input class="search" id="q" placeholder="🔍 Buscar ingrediente…" value="${esc(app.q)}">
+     <div id="list">${ingredientList()}</div>`;
+}
+function ingredientList() {
+  const q = fold(app.q);
+  const list = S.ingredients.filter(g => fold(g.name).includes(q)).sort(byName);
+  if (!list.length) return `<p class="muted center">No se encontró ningún ingrediente.</p>`;
+  return list.map(g => `<button class="ing" data-act="open-ing" data-id="${g.id}">
+    <div class="ing-h"><b>${esc(g.name)}</b>${g.pack ? '<span>📦 Empaque</span>' : ''}</div>
+    ${offersHtml(g)}</button>`).join('');
+}
+
+/* ====================== Hoja de ingrediente ====================== */
+const blankOffer = type => ({id: uid(), store:'', newStore:'', qty:'', unit: TYPES[type].buy[0], price:''});
+
+function openIng(id, onSaved) {
+  const ing = id ? ingById(id) : null;
+  let type = ing ? ing.type : 'mass';
+  let offs = ing ? sortedOffers(ing).map(o => ({id:o.id, store:o.store, newStore:'', qty:numInput(o.qty), unit:o.unit, price:numInput(o.price)}))
+                 : [blankOffer(type)];
+  const wrap = openSheet(`<h2>${ing ? 'Ingrediente' : 'Nuevo ingrediente'}</h2>
+    <label for="g-name">Nombre</label>
+    <input id="g-name" placeholder="Ej: Huevos" value="${esc(ing ? ing.name : '')}" autocomplete="off">
+    <label>¿Cómo lo compras?${ing ? '<span class="hint">El tipo no se puede cambiar. Si lo necesitas, crea otro ingrediente.</span>' : ''}</label>
+    <div class="seg" id="g-type">${Object.entries(TYPES).map(([k, t]) =>
+      `<button type="button" data-type="${k}" class="${k === type ? 'on' : ''}" ${ing ? 'disabled' : ''}>${t.emoji}<br>${t.name}</button>`).join('')}</div>
+    <label class="check-row"><input type="checkbox" id="g-pack" ${ing && ing.pack ? 'checked' : ''}>
+      <div class="cr-main"><b>📦 Es empaque</b><span>Caja, base, bolsa, cartón…</span></div></label>
+    <h3>💲 Precio por tienda</h3>
+    <div id="g-offers"></div>
+    <button class="btn ghost wide" data-act="o-add">+ Agregar precio de otra tienda</button>
+    <button class="btn wide" data-act="g-save">Guardar</button>
+    ${ing ? `<button class="btn danger wide" data-act="g-del" style="margin-top:20px">🗑 Borrar ingrediente</button>` : ''}`);
+
+  const storeOpts = sel => `<option value="">Elegir tienda…</option>` +
+    allStores().map(s => `<option value="${esc(s)}" ${s === sel ? 'selected' : ''}>${esc(s)}</option>`).join('') +
+    `<option value="__new__" ${sel === '__new__' ? 'selected' : ''}>➕ Añadir otra tienda…</option>`;
+  const blocks = () => [...wrap.querySelectorAll('.offer')];
+  const calcOffer = i => {
+    const b = blocks()[i]; if (!b) return;
+    const q = parseNum($('.o-qty', b).value), p = parseNum($('.o-price', b).value);
+    const box = $('.o-calc', b);
+    if (q > 0 && p > 0) { box.hidden = false; box.textContent = `= ${money2(p / baseQty(q, $('.o-unit', b).value))} por ${baseWord(type)}`; }
+    else box.hidden = true;
+  };
+  const drawOffers = () => {
+    $('#g-offers', wrap).innerHTML = offs.map((o, i) => `<div class="offer" data-i="${i}">
+      <div class="offer-h"><b>Tienda${offs.length > 1 ? ' ' + (i + 1) : ''}</b>${offs.length > 1 ? `<button class="x" data-act="o-del" aria-label="Quitar este precio">✕</button>` : ''}</div>
+      <select class="o-store" aria-label="Tienda">${storeOpts(o.store)}</select>
+      <input class="o-newstore" placeholder="Nombre de la tienda" value="${esc(o.newStore)}" ${o.store === '__new__' ? '' : 'hidden'} autocomplete="off" style="margin-top:8px">
+      <div class="row2 qty">
+        <div><label>Cantidad del paquete</label><input class="o-qty" inputmode="decimal" placeholder="Ej: 30" value="${esc(o.qty)}"></div>
+        <div><label>Unidad</label><select class="o-unit">${unitOpts(TYPES[type].buy, o.unit)}</select></div>
+      </div>
+      <label>Precio que pagaste</label>
+      <input class="o-price" inputmode="decimal" placeholder="$ 0" value="${esc(o.price)}">
+      <div class="calc-line o-calc" hidden></div></div>`).join('');
+    offs.forEach((_, i) => calcOffer(i));
+  };
+  const collect = () => blocks().forEach((b, i) => {
+    offs[i].store = $('.o-store', b).value; offs[i].newStore = $('.o-newstore', b).value;
+    offs[i].qty = $('.o-qty', b).value; offs[i].unit = $('.o-unit', b).value; offs[i].price = $('.o-price', b).value;
+  });
+  drawOffers();
+
+  wrap.addEventListener('input', e => { const b = e.target.closest('.offer'); if (b) calcOffer(+b.dataset.i); });
+  wrap.addEventListener('change', e => {
+    const b = e.target.closest('.offer');
+    if (!b) return;
+    if (e.target.classList.contains('o-store')) {
+      const nw = $('.o-newstore', b);
+      nw.hidden = e.target.value !== '__new__';
+      if (!nw.hidden) nw.focus();
+    }
+    calcOffer(+b.dataset.i);
+  });
+  wrap.addEventListener('click', async e => {
+    const tb = e.target.closest('[data-type]');
+    if (tb && !ing) {
+      collect();
+      type = tb.dataset.type;
+      offs.forEach(o => { o.unit = TYPES[type].buy[0]; });
+      wrap.querySelectorAll('#g-type button').forEach(x => x.classList.toggle('on', x.dataset.type === type));
+      drawOffers();
+      return;
+    }
+    const b = e.target.closest('[data-act]');
+    if (!b) return;
+    const a = b.dataset.act;
+    if (a === 'o-add') {
+      collect(); offs.push(blankOffer(type)); drawOffers();
+      const last = blocks().pop();
+      if (last) last.scrollIntoView({block:'center'});
+    }
+    else if (a === 'o-del') {
+      collect(); offs.splice(+b.closest('.offer').dataset.i, 1); drawOffers();
+    }
+    else if (a === 'g-save') {
+      collect();
+      const name = $('#g-name', wrap).value.trim();
+      if (!name) return toast('Escribe el nombre del ingrediente');
+      const seen = new Set(), clean = [];
+      for (const o of offs) {
+        let store = o.store === '__new__' ? o.newStore.trim() : o.store;
+        if (!store) return toast(o.store === '__new__' ? 'Escribe el nombre de la tienda' : 'Elige la tienda');
+        const known = allStores().find(s => fold(s) === fold(store));
+        if (known) store = known;
+        const qty = parseNum(o.qty), price = parseNum(o.price);
+        if (!(qty > 0)) return toast('Escribe la cantidad del paquete');
+        if (!(price > 0)) return toast('Escribe el precio que pagaste');
+        if (seen.has(fold(store))) return toast(`Ya anotaste un precio en ${store}. Usa cada tienda una sola vez`);
+        seen.add(fold(store));
+        clean.push({id: o.id, store, qty, unit: o.unit, price});
+      }
+      clean.forEach(o => { if (!allStores().includes(o.store)) S.settings.stores.push(o.store); });
+      const pack = $('#g-pack', wrap).checked;
+      let target = ing, merged = false;
+      if (target) Object.assign(target, {name, pack, offers: clean});
+      else {
+        const dup = S.ingredients.find(g => fold(g.name) === fold(name) && g.type === type);
+        if (dup) {       // ya existe: se agregan los precios a ese ingrediente para poder compararlos
+          clean.forEach(o => {
+            const k = dup.offers.findIndex(x => fold(x.store) === fold(o.store));
+            if (k >= 0) dup.offers[k] = o; else dup.offers.push(o);
+          });
+          dup.pack = dup.pack || pack; target = dup; merged = true;
+        } else { target = {id: uid(), name, type, pack, offers: clean}; S.ingredients.push(target); }
+      }
+      save();
+      await closeTop();
+      render();
+      toast(merged ? `Precio agregado a "${target.name}"` : 'Ingrediente guardado');
+      if (onSaved) onSaved(target);
+    }
+    else if (a === 'g-del') {
+      const used = S.recipes.filter(r => r.items.some(it => it.ing === ing.id)).length;
+      const msg = used ? `"${ing.name}" se usa en ${used} receta${used === 1 ? '' : 's'}. Si lo borras, esas recetas dejarán de contar su costo. ¿Borrarlo?` : `¿Borrar "${ing.name}"?`;
+      if (await confirmBox(msg, 'Borrar')) {
+        S.ingredients = S.ingredients.filter(x => x !== ing); save();
+        await closeTop(); render(); toast('Ingrediente borrado');
+      }
+    }
+  });
+  if (!ing) setTimeout(() => $('#g-name', wrap).focus(), 50);
+}
+
+/* ====================== Vista: Más ====================== */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (app.tab === 'more') render(); });
+
+function viewMore() {
+  const d = backupDays();
+  const lb = d === null ? 'Aún no has guardado una copia.' : (d === 0 ? 'Última copia: hoy.' : `Última copia: hace ${d} día${d === 1 ? '' : 's'}.`);
+  return `
+  <div class="set-card"><h2>💾 Copia de seguridad</h2>
+    <p>${lb} Al guardar, elige <b>Drive</b> en el menú para compartir y tus datos quedarán a salvo.</p>
+    <button class="btn" data-act="backup">Guardar copia</button>
+    <button class="btn ghost" data-act="restore">Restaurar copia</button></div>
+
+  <div class="set-card"><h2>💰 Precio de venta</h2>
+    <label for="s-wage">Valor de tu hora de trabajo</label>
+    <input id="s-wage" inputmode="decimal" value="${esc(numInput(S.settings.wage))}">
+    <label for="s-round">Redondear el precio hacia arriba a</label>
+    <select id="s-round">${[[0,'Sin redondeo'],[100,'$100'],[500,'$500'],[1000,'$1.000']].map(([v, l]) =>
+      `<option value="${v}" ${S.settings.rounding === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+
+  <div class="set-card"><label class="switch"><span><b>Letra más grande</b></span><input type="checkbox" id="s-big" ${S.settings.big ? 'checked' : ''}></label></div>
+
+  <div class="set-card"><h2>📲 Instalar en el celular</h2>
+    ${installEvt ? `<button class="btn" data-act="install">Instalar la app</button>` :
+    `<p>Android (Chrome): menú ⋮ → <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>.<br>iPhone (Safari): botón Compartir → <b>Agregar a inicio</b>.</p>`}</div>
+
+  <div class="set-card"><h2>🧹 Datos</h2>
+    ${(!S.ingredients.length && !S.recipes.length) ? `<button class="btn ghost" data-act="sample">Cargar un ejemplo</button>` : ''}
+    <button class="btn danger" data-act="wipe">Borrar todos los datos</button></div>`;
+}
+
+/* ====================== Copia de seguridad ====================== */
+function markBackup() { S.settings.lastBackup = new Date().toISOString(); save(); render(); }
+async function exportBackup() {
+  const payload = {app:'costos-postres', version:4, exported:new Date().toISOString(),
+    data:{v:4, ingredients:S.ingredients, recipes:S.recipes, settings:S.settings}};
+  const name = `respaldo-postres-${today()}.json`;
+  const file = new File([JSON.stringify(payload, null, 1)], name, {type:'application/json'});
+  try {
+    if (navigator.canShare && navigator.canShare({files:[file]})) {
+      await navigator.share({files:[file], title:'Respaldo de costos de postres'});
+      markBackup(); toast('Copia guardada');
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  markBackup(); toast('Copia descargada. Súbela a tu Drive.');
+}
+function validBackup(o) {
+  const d = o && o.data;
+  if (!d || !Array.isArray(d.ingredients) || !Array.isArray(d.recipes)) return false;
+  const okIng = i => i && i.id && TYPES[i.type] && (Array.isArray(i.offers)
+    ? i.offers.length > 0 && i.offers.every(f => f && UNITS[f.unit] && f.qty > 0 && isFinite(f.price))
+    : (UNITS[i.unit] && i.qty > 0 && isFinite(i.price)));          // copias de versiones anteriores
+  return d.ingredients.every(okIng) && d.recipes.every(r => r && r.id && Array.isArray(r.items));
+}
+function importBackup(file) {
+  const fr = new FileReader();
+  fr.onload = async () => {
+    let o;
+    try { o = JSON.parse(fr.result); } catch (e) { return toast('Ese archivo no es una copia válida'); }
+    if (!validBackup(o)) return toast('Ese archivo no es una copia válida');
+    const msg = `Se reemplazarán tus datos actuales por la copia: ${o.data.recipes.length} receta(s) y ${o.data.ingredients.length} ingrediente(s). ¿Continuar?`;
+    if (!(await confirmBox(msg, 'Restaurar'))) return;
+    S = normState(o.data);
+    S.settings.lastBackup = o.exported || new Date().toISOString();
+    save(); render(); toast('Copia restaurada');
+  };
+  fr.readAsText(file);
+}
+
+/* ====================== Datos de ejemplo ====================== */
+function loadSample() {
+  const mk = (name, type, pack, offers) => ({id: uid(), name, type, pack,
+    offers: offers.map(([store, qty, unit, price]) => ({id: uid(), store, qty, unit, price}))});
+  const harina = mk('Harina de trigo', 'mass', false, [['Pasadena', 1, 'kg', 4800], ['D1', 1, 'kg', 4300]]);
+  const azucar = mk('Azúcar', 'mass', false, [['ARA', 1, 'kg', 4500]]);
+  const huevos = mk('Huevos', 'count', false, [['D1', 30, 'u', 15000], ['Aramar', 30, 'u', 16500], ['Pasadena', 30, 'u', 20000]]);
+  const mantequilla = mk('Mantequilla', 'mass', false, [['Aramar', 250, 'g', 8900]]);
+  const leche = mk('Leche entera', 'volume', false, [['D1', 1, 'l', 4800]]);
+  const vainilla = mk('Esencia de vainilla', 'volume', false, [['Roma Distribuciones', 120, 'ml', 6500]]);
+  const caja = mk('Caja para torta', 'count', true, [['Roma Distribuciones', 10, 'u', 22000]]);
+  S.ingredients.push(harina, azucar, huevos, mantequilla, leche, vainilla, caja);
+  S.recipes.push({id: uid(), name:'Torta de vainilla (ejemplo)', portions:12,
+    items:[{ing:harina.id, amt:500, unit:'g'}, {ing:azucar.id, amt:300, unit:'g'}, {ing:huevos.id, amt:4, unit:'u'},
+           {ing:mantequilla.id, amt:250, unit:'g'}, {ing:leche.id, amt:250, unit:'ml'}, {ing:vainilla.id, amt:1, unit:'cdta'},
+           {ing:caja.id, amt:1, unit:'u'}],
+    hrs:2.5, notes:'Receta de ejemplo para probar la app. Puedes borrarla.'});
+  save(); render(); toast('Ejemplo cargado');
+}
+
+/* ====================== Eventos globales ====================== */
+document.addEventListener('click', async e => {
+  if (e.target.closest('.screen, .sheet-wrap')) return;   // las capas manejan sus propios clics
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'tab') { app.tab = b.dataset.id; app.q = ''; render(); window.scrollTo(0, 0); }
+  else if (a === 'new-recipe') newRecipe();
+  else if (a === 'open-recipe') openRecipe(b.dataset.id, false);
+  else if (a === 'new-ing') openIng(null);
+  else if (a === 'open-ing') openIng(b.dataset.id);
+  else if (a === 'sample') loadSample();
+  else if (a === 'backup') exportBackup();
+  else if (a === 'restore') $('#file-in').click();
+  else if (a === 'install' && installEvt) { installEvt.prompt(); installEvt = null; render(); }
+  else if (a === 'wipe') {
+    if (await confirmBox('Se borrarán TODAS las recetas e ingredientes de este dispositivo. ¿Seguro?', 'Borrar todo')) {
+      S.ingredients = []; S.recipes = []; save(); render(); toast('Datos borrados');
+    }
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 's-round') { S.settings.rounding = +t.value; save(); toast('Redondeo actualizado'); }
+  else if (t.id === 's-wage') {
+    const n = parseNum(t.value);
+    if (isNaN(n) || n <= 0) return toast('Escribe un valor válido');
+    S.settings.wage = n; save(); toast('Valor de la hora guardado');
+  }
+  else if (t.id === 's-big') { S.settings.big = t.checked; save(); render(); }
+  else if (t.id === 'file-in') { if (t.files[0]) importBackup(t.files[0]); t.value = ''; }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') {
+    app.q = e.target.value;
+    $('#list').innerHTML = app.tab === 'recipes' ? recipeList() : ingredientList();
+  }
+});
+
+/* ====================== Inicio ====================== */
+render();
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+})();
+</script>
+</body>
+</html>
